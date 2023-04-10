@@ -4,7 +4,8 @@ import logging
 import json
 import re
 import os
-from get_twitch_token import validate_token, refresh_token
+from twitch_token import validate_token, refresh_token
+CONFIG_PATH = "./config.json"
 
 
 def parce_src(s: str):
@@ -103,7 +104,7 @@ async def main(config):
 
 if __name__ == "__main__":
     logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
-    with open("config.json") as f:
+    with open(CONFIG_PATH) as f:
         conf = json.load(f)
     exp_in = validate_token(conf['access_token'])
     if exp_in < 0:

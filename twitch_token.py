@@ -1,9 +1,14 @@
 import requests
 import json
-import logging
+from consolemenu import SelectionMenu
+CONFIG_PATH = "./config.json"
 
 
 def validate_token(token):
+    """
+    Запрос валидации токена.
+        return: время действия токена (минуты) или -1 при окончании действия токена.
+    """
     resp = requests.get(
         "https://id.twitch.tv/oauth2/validate",
         headers={"Authorization": f"OAuth {token}"}
@@ -15,6 +20,9 @@ def validate_token(token):
 
 
 def refresh_token(client_id, client_secret, r_token):
+    """
+    Запрос на реактивацию токена.
+    """
     resp = requests.post(
         "https://id.twitch.tv/oauth2/token",
         headers={"Content-Type": "application/x-www-form-urlencoded"},
@@ -46,13 +54,17 @@ def get_access_token(client_id, client_secret, auth_code):
 
 
 if __name__ == "__main__":
-    # get new token
-    with open("config.json") as f:
-        conf = json.load(f)
-    print(f"https://id.twitch.tv/oauth2/authorize?response_type=code&client_id={conf['client_id']}&redirect_uri=http://localhost:3000&scope=chat%3Aread")
-    auth_code = input("Enter authorization code: ").strip()
-    access_token = get_access_token(conf["client_id"], conf["client_secret"], auth_code)
-    conf["access_token"] = access_token["access_token"]
-    conf["refresh_token"] = access_token["refresh_token"]
-    with open("config.json", "w") as f:
-        json.dump(conf, f, ensure_ascii=False, indent=4)
+    menu = SelectionMenu(["New token", "Refresh token"])
+    menu.show()
+    if menu.selected_option == 0:
+        with open(CONFIG_PATH) as f:
+            conf = json.load(f)
+        print(f"https://id.twitch.tv/oauth2/authorize?response_type=code&client_id={conf['client_id']}&redirect_uri=http://localhost:3000&scope=chat%3Aread")
+        auth_code = input("Enter authorization code: ").strip()
+        access_token = get_access_token(conf["client_id"], conf["client_secret"], auth_code)
+        conf["access_token"] = access_token["access_token"]
+        conf["refresh_token"] = access_token["refresh_token"]
+        with open(CONFIG_PATH, "w") as f:
+            json.dump(conf, f, ensure_ascii=False, indent=4)
+    elif menu.selected_option == 1:
+        print("Not implemented!")
