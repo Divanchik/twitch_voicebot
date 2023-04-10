@@ -84,12 +84,13 @@ async def handle_message(wsock, message):
         await asyncio.sleep(0.5)
 
 
-async def listener(wsock):
+async def listener(wsock, flogger: logging.Logger):
     async for message in wsock:
+        flogger.info(message)
         await handle_message(wsock, message)
 
 
-async def main(config):
+async def main(config, flogger: logging.Logger):
     uri = "ws://irc-ws.chat.twitch.tv:80"
     channel = "dimadivan"
     async with websockets.connect(uri) as wsock:
@@ -99,10 +100,16 @@ async def main(config):
         print(resp)
         await wsock.send(f"JOIN #{channel}")
         logging.info(f"Joining [{channel}] channel...")
-        await listener(wsock)
+        await listener(wsock, flogger)
 
 
 if __name__ == "__main__":
+    filelogger = logging.getLogger("filelogger")
+    filelogger.setLevel(logging.INFO)
+    filehandler = logging.FileHandler("./raw_messages.log", encoding="utf-8")
+    filehandler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%H:%M:%S"))
+    filelogger.addHandler(filehandler)
+
     logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
     with open(CONFIG_PATH) as f:
         conf = json.load(f)
@@ -120,4 +127,4 @@ if __name__ == "__main__":
             conf = json.dump(conf, f)
     else:
         logging.info(f"Token expires in {exp_in} minutes!")
-        asyncio.run(main(conf))
+        asyncio.run(main(conf, filelogger))
