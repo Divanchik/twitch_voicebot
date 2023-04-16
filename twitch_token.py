@@ -1,6 +1,7 @@
 import requests
 import json
 from consolemenu import SelectionMenu
+import webbrowser
 CONFIG_PATH = "./config.json"
 
 
@@ -59,7 +60,8 @@ if __name__ == "__main__":
     if menu.selected_option == 0:
         with open(CONFIG_PATH) as f:
             conf = json.load(f)
-        print(f"https://id.twitch.tv/oauth2/authorize?response_type=code&client_id={conf['client_id']}&redirect_uri=http://localhost:3000&scope=chat%3Aread+channel%3Aread%3Aredemptions")
+        url = f"https://id.twitch.tv/oauth2/authorize?response_type=code&client_id={conf['client_id']}&redirect_uri=http://localhost:3000&scope=chat%3Aread+channel%3Aread%3Aredemptions"
+        webbrowser.open(url, 2)
         auth_code = input("Enter authorization code: ").strip()
         access_token = get_access_token(conf["client_id"], conf["client_secret"], auth_code)
         conf["access_token"] = access_token["access_token"]
