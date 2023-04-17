@@ -4,8 +4,9 @@ import logging
 import json
 import re
 import os
-from twitch_token import validate_token, refresh_token
+from twitch_functions import validate_token, refresh_token
 CONFIG_PATH = "./config.json"
+ONLY_HIGHLIGHTED = True
 
 
 def parse_tags(s: str):
@@ -137,13 +138,15 @@ def parse_msg(msg: str):
     
 
 async def handle_message(wsock, message):
-    # msg = parse_msg(message)
+    global ONLY_HIGHLIGHTED
     if re.match("PING.*", message):
         await wsock.send(f"PONG{message[4:]}")
         logging.info("PING PONG")
     else:
-        # logging.info(f"{msg['source']['nick']} >> {msg['parameters']}")
-        # os.system(f"echo \"{msg['parameters']}\" | RHVoice-test -p Anna -r 80")
+        msg = parse_msg(message)
+        if (ONLY_HIGHLIGHTED and msg['tags'].get('msg-id') == 'highlighted-message') or (not ONLY_HIGHLIGHTED):
+            os.system(f"echo \"{msg['parameters']}\" | RHVoice-test -p Anna -r 80")
+        logging.info(f"{msg['source'].get('nick')} >> {msg['parameters']}")
         await asyncio.sleep(0.5)
 
 
