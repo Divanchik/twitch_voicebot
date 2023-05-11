@@ -8,7 +8,7 @@ from twitch_functions import validate_token, refresh_token
 from twitch_message import *
 CONFIG_PATH = "./config.json"
 ONLY_HIGHLIGHTED = False
-VOICE = True
+VOICE = False
 
     
 async def handle_message(wsock, message):
@@ -28,17 +28,18 @@ async def handle_message(wsock, message):
         await asyncio.sleep(0.5)
 
 
-async def listener(wsock, flogger: logging.Logger):
+async def listener(wsock):
     async for raw_input in wsock:
-        flogger.info(raw_input)
+        # with open("raw_messages.log", "a") as f:
+        #     f.write(raw_input)
         messages = raw_input.split('\n')
         for msg in messages:
             await handle_message(wsock, msg)
 
 
-async def main(config, flogger: logging.Logger):
+async def main(config):
     uri = "ws://irc-ws.chat.twitch.tv:80"
-    channel = "dimadivan"
+    channel = "yumekomoore"
     async with websockets.connect(uri) as wsock:
         await wsock.send(f"CAP REQ :twitch.tv/commands twitch.tv/tags")
         await wsock.send(f"PASS oauth:{config['access_token']}")
@@ -49,16 +50,10 @@ async def main(config, flogger: logging.Logger):
         logging.info(f"Joining [{channel}] channel...")
         resp = await wsock.recv()
         print(resp)
-        await listener(wsock, flogger)
+        await listener(wsock)
 
 
 if __name__ == "__main__":
-    filelogger = logging.getLogger("filelogger")
-    filelogger.setLevel(logging.INFO)
-    filehandler = logging.FileHandler("./raw_messages.log", encoding="utf-8")
-    filehandler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%H:%M:%S"))
-    filelogger.addHandler(filehandler)
-
     logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
     with open(CONFIG_PATH) as f:
         conf = json.load(f)
@@ -77,6 +72,6 @@ if __name__ == "__main__":
     else:
         logging.info(f"Token expires in {exp_in} minutes!")
         try:
-            asyncio.run(main(conf, filelogger))
+            asyncio.run(main(conf))
         except KeyboardInterrupt:
             logging.info("Exit routine...")

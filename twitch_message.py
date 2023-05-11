@@ -66,12 +66,12 @@ def parse_command(s: str):
         print("The Twitch IRC server is about to terminate the connection for maintenance.")
         result = {'command': tmp[0]}
     elif tmp[0] == '421':
-        print('Unsupported IRC command:', tmp[2])
+        print(f"\nUnsupported IRC command: {tmp[2]}\n")
         result = None
     elif tmp[0] == '001':
         result = {'command': tmp[0], 'channel': tmp[1]}
     elif tmp[0] in ['002', '003', '004', '353', '366', '372', '375', '376']:
-        print("numeric message:", tmp[0])
+        print(f"\nNumeric message: {tmp[0]}\n")
         return None
     else:
         print(f"\nUnexpected command: {tmp[0]}\n")
@@ -136,4 +136,4 @@ def parse_message(msg: str):
 
 if __name__ == "__main__":
     from json import dumps
-    print(dumps(parse_message('@badge-info=;badges=;client-nonce=d8747a27930a536e38d795752611d2ed;color=#FF0000;display-name=WB_Ghost;emotes=;first-msg=0;flags=;id=bb42c555-402d-48f2-82a8-40c23b6fa607;mod=0;returning-chatter=0;room-id=135015290;subscriber=0;tmi-sent-ts=1681925706763;turbo=0;user-id=755589900;user-type= :wb_ghost!wb_ghost@wb_ghost.tmi.twitch.tv PRIVMSG #dimadivan :Как дела хоть?'), indent=4))
+    print(dumps(parse_message('@badge-info=;badges=;client-nonce=d8747a27930a536e38d795752611d2ed;color=#FF0000;display-name=WB_Ghost;emotes=;first-msg=0;flags=;id=bb42c555-402d-48f2-82a8-40c23b6fa607;mod=0;returning-chatter=0;room-id=135015290;subscriber=0;tmi-sent-ts=1681925706763;turbo=0;user-id=755589900;user-type= :wb_ghost!wb_ghost@wb_ghost.tmi.twitch.tv PRIVMSG #dimadivan :Как дела хоть?'), indent=4, ensure_ascii=False))
