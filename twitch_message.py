@@ -1,3 +1,6 @@
+import re
+
+
 def parse_tags(s: str):
     tags_to_ignore = {
         'client-nonce': None,
@@ -63,18 +66,18 @@ def parse_command(s: str):
     elif tmp[0] in ['USERSTATE', 'ROOMSTATE']:
         result = {'command': tmp[0], 'channel': tmp[1]}
     elif tmp[0] == 'RECONNECT':
-        print("The Twitch IRC server is about to terminate the connection for maintenance.")
+        print("\nThe Twitch IRC server is about to terminate the connection for maintenance.")
         result = {'command': tmp[0]}
     elif tmp[0] == '421':
-        print(f"\nUnsupported IRC command: {tmp[2]}\n")
+        print(f"\nUnsupported IRC command: {tmp[2]}")
         result = None
     elif tmp[0] == '001':
         result = {'command': tmp[0], 'channel': tmp[1]}
     elif tmp[0] in ['002', '003', '004', '353', '366', '372', '375', '376']:
-        print(f"\nNumeric message: {tmp[0]}\n")
+        print(f"\nNumeric message: {tmp[0]}")
         return None
     else:
-        print(f"\nUnexpected command: {tmp[0]}\n")
+        print(f"\nUnexpected command: {tmp[0]}")
         return None
     return result
 
@@ -90,6 +93,7 @@ def parse_source(s: str):
 
 
 def parse_message(msg: str):
+    emoji_template = "[a-z]+\d*[A-Z][a-zA-Z\d]+"
 
     i = 0
     raw_tags = None
@@ -130,7 +134,12 @@ def parse_message(msg: str):
     if raw_tags is not None:
         tags = parse_tags(raw_tags)
     source = parse_source(raw_source)
-    parameters = raw_parameters
+    if raw_parameters is None:
+        parameters = raw_parameters
+    else:
+        parameters = raw_parameters.strip()
+        print("Filtering:", parameters, ">>", re.sub(emoji_template, '', parameters))
+        parameters = re.sub(emoji_template, '', parameters)
 
     return {'tags': tags, 'source': source, 'command': command, 'parameters': parameters}
 

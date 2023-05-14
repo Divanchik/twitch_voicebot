@@ -8,7 +8,7 @@ from twitch_functions import validate_token, refresh_token
 from twitch_message import *
 CONFIG_PATH = "./config.json"
 ONLY_HIGHLIGHTED = False
-VOICE = False
+VOICE = True
 
     
 async def handle_message(wsock, message):
@@ -21,10 +21,13 @@ async def handle_message(wsock, message):
         logging.info("PING PONG")
     else:
         msg = parse_message(message)
+        is_highlighted = (msg['tags'] is not None) and (msg['tags'].get('msg-id') == 'highlighted-message')
+        nick_is_valid = (msg['source'] is not None) and (msg['source'].get('nick') is not None) and (msg['source']['nick'] not in nicks_to_ignore)
         if msg['command'] is not None and msg['command'].get('command') == 'PRIVMSG':
             logging.info(f"{msg['source'].get('nick')} >> {msg['parameters']}")
-            if VOICE and ((not ONLY_HIGHLIGHTED) or (ONLY_HIGHLIGHTED and msg['tags'] is not None and msg['tags'].get('msg-id') == 'highlighted-message')):
-                os.system(f"echo \"{msg['parameters']}\" | RHVoice-test -p Anna -r 80")
+            if VOICE and nick_is_valid:
+                if (is_highlighted if ONLY_HIGHLIGHTED else True):
+                    os.system(f"echo \"{msg['parameters']}\" | RHVoice-test -p Anna -r 80")
         await asyncio.sleep(0.5)
 
 
@@ -39,7 +42,7 @@ async def listener(wsock):
 
 async def main(config):
     uri = "ws://irc-ws.chat.twitch.tv:80"
-    channel = "yumekomoore"
+    channel = "dimadivan"
     async with websockets.connect(uri) as wsock:
         await wsock.send(f"CAP REQ :twitch.tv/commands twitch.tv/tags")
         await wsock.send(f"PASS oauth:{config['access_token']}")
