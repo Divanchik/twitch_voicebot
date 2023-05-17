@@ -1,6 +1,12 @@
 import re
 
 
+def filter_message(s: str):
+    emoji_pattern = "[a-z]+\d*[A-Z][a-zA-Z\d]*"
+    result = re.sub(emoji_pattern, '', s)
+    return result
+
+
 def parse_tags(s: str):
     tags_to_ignore = {
         'client-nonce': None,
@@ -93,8 +99,6 @@ def parse_source(s: str):
 
 
 def parse_message(msg: str):
-    emoji_template = "[a-z]+\d*[A-Z][a-zA-Z\d]+"
-
     i = 0
     raw_tags = None
     raw_source = None
@@ -138,8 +142,12 @@ def parse_message(msg: str):
         parameters = raw_parameters
     else:
         parameters = raw_parameters.strip()
-        print("Filtering:", parameters, ">>", re.sub(emoji_template, '', parameters))
-        parameters = re.sub(emoji_template, '', parameters)
+        # print('\n')
+        # print('='*50)
+        # print(parameters)
+        parameters = filter_message(parameters)
+        # print(parameters)
+        # print('='*50)
 
     return {'tags': tags, 'source': source, 'command': command, 'parameters': parameters}
 

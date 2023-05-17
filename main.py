@@ -7,8 +7,10 @@ import os
 from twitch_functions import validate_token, refresh_token
 from twitch_message import *
 CONFIG_PATH = "./config.json"
-ONLY_HIGHLIGHTED = False
-VOICE = True
+VOICE = False # Включить/выключить озвучку сообщений
+ONLY_HIGHLIGHTED = False # Озвучивать только выделенные сообщения
+CHANNEL = "theiathedraco"
+LOG_RAW = True # Логгирование сообщений от сервера
 
     
 async def handle_message(wsock, message):
@@ -32,25 +34,27 @@ async def handle_message(wsock, message):
 
 
 async def listener(wsock):
+    global LOG_RAW
     async for raw_input in wsock:
-        # with open("raw_messages.log", "a") as f:
-        #     f.write(raw_input)
+        if LOG_RAW:
+            with open("raw_messages.log", "a") as f:
+                f.write(raw_input)
         messages = raw_input.split('\n')
         for msg in messages:
             await handle_message(wsock, msg)
 
 
 async def main(config):
+    global CHANNEL
     uri = "ws://irc-ws.chat.twitch.tv:80"
-    channel = "dimadivan"
     async with websockets.connect(uri) as wsock:
         await wsock.send(f"CAP REQ :twitch.tv/commands twitch.tv/tags")
         await wsock.send(f"PASS oauth:{config['access_token']}")
         await wsock.send("NICK dimadivan")
         resp = await wsock.recv()
         print(resp)
-        await wsock.send(f"JOIN #{channel}")
-        logging.info(f"Joining [{channel}] channel...")
+        await wsock.send(f"JOIN #{CHANNEL}")
+        logging.info(f"Joining [{CHANNEL}] channel...")
         resp = await wsock.recv()
         print(resp)
         await listener(wsock)
@@ -60,6 +64,7 @@ if __name__ == "__main__":
     logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
     with open(CONFIG_PATH) as f:
         conf = json.load(f)
+
     exp_in = validate_token(conf['access_token'])
     if exp_in < 0:
         logging.warning("Invalid or expired access token! Trying to refresh token...")
@@ -72,9 +77,9 @@ if __name__ == "__main__":
         conf["refresh_token"] = ref_data["refresh_token"]
         with open("config.json", "w") as f:
             conf = json.dump(conf, f)
-    else:
-        logging.info(f"Token expires in {exp_in} minutes!")
-        try:
-            asyncio.run(main(conf))
-        except KeyboardInterrupt:
-            logging.info("Exit routine...")
+
+    logging.info(f"Token expires in {exp_in} minutes!")
+    try:
+        asyncio.run(main(conf))
+    except KeyboardInterrupt:
+        logging.info("Exit routine...")
